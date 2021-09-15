@@ -38,9 +38,9 @@ function [] = Received_Power_Data_Friis1(N, frequency, iterations, name, antenna
         source_cordinates = zeros(azimuthFinalAngle, elevationFinalAngle, 3);
         for azimuthAngle = 1:azimuthFinalAngle
             for elevationAngle = 1:elevationFinalAngle
-                source_cordinates(azimuthAngle,elevationAngle,1) = p*cosd(azimuthAngle-1)*cosd(elevationAngle-1); % x axis
-                source_cordinates(azimuthAngle,elevationAngle,2) = p*sind(azimuthAngle-1)*cosd(elevationAngle-1);% y axis
-                source_cordinates(azimuthAngle,elevationAngle,3) = p*sind(elevationAngle-1); % z axis
+                source_cordinates(azimuthAngle,elevationAngle,1) = p*cosd(azimuthAngle)*cosd(elevationAngle); % x axis
+                source_cordinates(azimuthAngle,elevationAngle,2) = p*sind(azimuthAngle)*cosd(elevationAngle);% y axis
+                source_cordinates(azimuthAngle,elevationAngle,3) = p*sind(elevationAngle); % z axis
             end
         end
     
@@ -49,12 +49,12 @@ function [] = Received_Power_Data_Friis1(N, frequency, iterations, name, antenna
             x_n = antenna_cordinates(n, 1);
             y_n = antenna_cordinates(n, 2);
             z_n = antenna_cordinates(n, 3);
-            for azimuthAngle = 1:azimuthFinalAngle-1
-                for elevationAngle = 1:elevationFinalAngle-1
-                    
-                    x_t = source_cordinates(azimuthAngle+1,elevationAngle+1, 1);
-                    y_t = source_cordinates(azimuthAngle+1,elevationAngle+1, 2);
-                    z_t = source_cordinates(azimuthAngle+1,elevationAngle+1, 3);
+            for azimuthAngle = 1:azimuthFinalAngle
+                for elevationAngle = 1:elevationFinalAngle
+                  
+                    x_t = source_cordinates(azimuthAngle,elevationAngle, 1);
+                    y_t = source_cordinates(azimuthAngle,elevationAngle, 2);
+                    z_t = source_cordinates(azimuthAngle,elevationAngle, 3);
                     
                     d_n = sqrt(power(x_n-x_t, 2) + power(y_n-y_t, 2) + power(z_n-z_t, 2)); % Calculate the distance between the source and each of the antennas
                     

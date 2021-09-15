@@ -92,13 +92,17 @@ if __name__ == '__main__':
 	test_percentage = 0.2
 	phase = 5
 
+	
+	modelList = [DecisionTreeClassifier(random_state=42)]
+	modelName = ['DT']
+	
 	'''
 	modelList = [DecisionTreeClassifier(max_depth=900, max_features='auto', random_state=42)]
 	modelName = ['DT']
-	'''
 
 	modelList = [RandomForestClassifier(n_estimators=10)]
 	modelName = ['RF']
+	'''
 	
 	for name,model in enumerate(modelList):
 		for i in os.listdir(Data_Folder):
