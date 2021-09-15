@@ -13,15 +13,17 @@ mkdir([pwd folder]); % Create folder
 
 % Create an array with random values of distance from transmitter to system
 rng('default');
-min_dist = 10;
-max_dist = 1000;
 p_matrix = zeros(iterations, 1);
+% min_dist = 10;
+% max_dist = 100;
+% for i = 1:iterations
+%     p_matrix(i) = (max_dist-min_dist)*rand() + min_dist;
+% end
 for i = 1:iterations
-    %p_matrix(i) = randi(100);
-    p_matrix(i) = (max_dist-min_dist)*rand() + min_dist;
+    p_matrix(i) = randi(90)+10;
 end
 
-for antennasNumber = 2:16 % Generate data for a two to 16 antenna system
+for antennasNumber = 4:16 % Generate data for a two to 16 antenna system
      mkdir([pwd folder int2str(antennasNumber) '/']);
      name = strcat(pwd, folder, int2str(antennasNumber), '/iter_');
      N = antennasNumber;
