@@ -12,10 +12,7 @@ function [] = Received_Power_Data_Friis1(N, frequency, iterations, name, antenna
     Gt = 1; % Transmitter gain (unity gain)
     L = 1; % System losses (lossless)
 
-    Gn = db2mag(patternAzimuth(antenna_type,frequency,(0:1:180))); % Directivity along the azimuth
-    %Gn = patternAzimuth(antenna_type,frequency,(0:1:180))
-%     GndB = patternAzimuth(antenna_type,frequency,(0:1:180)); % Directivity along the azimuth
-%     Gn = 10.^(GndB/10);
+    Gn = db2mag(patternAzimuth(antenna_type,frequency,(0:1:180))); % Directivity along the azimuth (dB)
     Gn(:,end) = []; % Remove last column because the array has 361 elements (azimuth angles) instead of 360 (angles 0 and 360 are treated as different angles)
     Gn(end,:) = []; % Remove last row because the array has 181 elements (elevation angles) instead of 180 (angles 0 and 180 are treated as different angles)
     
@@ -30,7 +27,6 @@ function [] = Received_Power_Data_Friis1(N, frequency, iterations, name, antenna
     azimuthFinalAngle = 360;
     elevationFinalAngle = 180;
     for iter = 1:iterations
-        iter
     
         p = p_matrix(iter); % Distance from source to center of system
     
