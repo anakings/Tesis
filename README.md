@@ -1,3 +1,5 @@
+# Flowchart without considering noise
+
 ```mermaid
 graph
     A{{"Set input parameters: 𝑁, 𝑓, 𝑟, 𝑎𝑛𝑡𝑒𝑛𝑛𝑎𝑇𝑦𝑝𝑒, 𝐺_𝑡,  𝑃_𝑡,  𝐏[𝐦],  𝜙_𝐹, 𝜃_𝐹"}} -->B{"n ≤ 𝑁"}
@@ -39,6 +41,7 @@ graph
     S --> K
 ```
 
+# Flowchart considering noise (changes are in red)
 ```mermaid
 graph
     A{{"Set input parameters: 𝑁, 𝑓, 𝑟, 𝑎𝑛𝑡𝑒𝑛𝑛𝑎𝑇𝑦𝑝𝑒, 𝐺_𝑡, 𝑃_𝑡𝑟𝑎, 𝐏[𝐦], 𝜙_𝐹, 𝜃_𝐹, 𝑆𝑁𝑅, 𝑖𝑡𝑒𝑟𝑎𝑡𝑖𝑜𝑛𝑠"}} --> ADD1["𝜎^2 = 𝑃_𝑡𝑟𝑎  / 𝑆𝑁𝑅"]
