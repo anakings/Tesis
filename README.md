@@ -1,3 +1,8 @@
+![image](https://user-images.githubusercontent.com/61946570/156599663-cd9bb0e6-9a25-4f8a-9e9e-db1a4b7476ec.png)
+![image](https://user-images.githubusercontent.com/61946570/156599780-26df058e-3af0-4fa5-bca5-9a206d67bfe1.png)
+![image](https://user-images.githubusercontent.com/61946570/156599809-7c354bec-e417-403d-b454-80218f84a559.png)
+![image](https://user-images.githubusercontent.com/61946570/156599849-c7919cb8-7c18-44f7-b266-73877cb65f65.png)
+
 # Flowchart with noise
 
 ```mermaid
