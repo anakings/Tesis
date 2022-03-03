@@ -64,3 +64,7 @@
     id_4 --> |yes|id_3
     id_4 --> |no|id_5["𝐍𝐨𝐢𝐬𝐞 = 𝐍𝐨𝐢𝐬𝐞 / 𝐾"]
 ```
+
+
+![Accurracy_8](https://user-images.githubusercontent.com/61946570/156604639-e83cfc96-6bb2-4206-9323-8de29fc2a33b.png)
+![MSE_8](https://user-images.githubusercontent.com/61946570/156604680-c6d60184-037a-42bd-b6ac-8fb6a5349a6e.png)
