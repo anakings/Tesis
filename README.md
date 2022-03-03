@@ -40,7 +40,7 @@
 ```
 
 ```mermaid
-    graph 
+    graph
     noise_1[A] --> ADD1["Generate a new noise matrix (𝐍𝐨𝐢𝐬𝐞)"]
     ADD1 --> noise_2["𝐃𝐀𝐓𝐀 = 𝐏_𝐫 + 𝐍𝐨𝐢𝐬𝐞"]
     style noise_1 fill:#f96,stroke:#f66,stroke-width:2px,color:#fff,stroke-dasharray: 5 5
@@ -52,4 +52,10 @@
     
     noise_3 --> |no|noise_4[END]
     style noise_4 fill:#E74C3C,stroke:#f66,stroke-width:2px,color:#fff,stroke-dasharray: 5 5
+
+    id_1["Generate a new noise matrix (𝐍𝐨𝐢𝐬𝐞)"] --> id_2["𝐍𝐨𝐢𝐬𝐞 = 0"]
+    id_2 --> id_3["𝐍𝐨𝐢𝐬𝐞 = 𝐍𝐨𝐢𝐬𝐞 + rand"]
+    id_3 --> id_4{"k ≤ 𝐾"}
+    id_4 --> |yes|id_3
+    id_4 --> |no|id_5["𝐍𝐨𝐢𝐬𝐞 = 𝐍𝐨𝐢𝐬𝐞 / 𝐾"]
 ```
