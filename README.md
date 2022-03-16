@@ -47,12 +47,12 @@
 ```mermaid
     graph
     noise_1[A] --> ADD1["Generate a new noise matrix (𝐍𝐨𝐢𝐬𝐞)"]
-    style ADD1 fill:#2ABD6C,stroke:#f66,stroke-width:2px,color:#fff,stroke-dasharray: 5 5
+    style ADD1 fill:#2ABD6C,stroke:#40CB7F,stroke-width:2px,color:#fff,stroke-dasharray: 5 5
     ADD1 --> noise_2["𝐃𝐀𝐓𝐀 = 𝐏_𝐫 + 𝐍𝐨𝐢𝐬𝐞"]
     style noise_1 fill:#f96,stroke:#f66,stroke-width:2px,color:#fff,stroke-dasharray: 5 5
     noise_2 --> noise_3{"m <= 𝑀"}
     noise_3 --> |yes|noise_5["Generate a new noise matrix (𝐍𝐨𝐢𝐬𝐞)"]
-    style noise_5 fill:#2ABD6C,stroke:#f66,stroke-width:2px,color:#fff,stroke-dasharray: 5 5
+    style noise_5 fill:#2ABD6C,stroke:#40CB7F,stroke-width:2px,color:#fff,stroke-dasharray: 5 5
     noise_5 --> noise_6["𝐃𝐀𝐓𝐀_𝐧𝐞𝐰 = 𝐏_𝐫 + 𝐍𝐨𝐢𝐬𝐞"]
     noise_6 --> noise_7["𝐃𝐀𝐓𝐀 = 𝒄𝒐𝒏𝒄𝒂𝒕𝒆𝒏𝒂𝒕𝒆 ( 𝐃𝐀𝐓𝐀, 𝐃𝐀𝐓𝐀_𝐧𝐞𝐰 )"]
     noise_7 --> noise_3
@@ -61,7 +61,7 @@
     style noise_4 fill:#E74C3C,stroke:#f66,stroke-width:2px,color:#fff,stroke-dasharray: 5 5
 
     id_1["Generate a new noise matrix (𝐍𝐨𝐢𝐬𝐞)"] --> id_2["𝐍𝐨𝐢𝐬𝐞 = 0"]
-    style id_1 fill:#2ABD6C,stroke:#f66,stroke-width:2px,color:#fff,stroke-dasharray: 5 5
+    style id_1 fill:#2ABD6C,stroke:#40CB7F,stroke-width:2px,color:#fff,stroke-dasharray: 5 5
     id_2 --> id_3["𝐍𝐨𝐢𝐬𝐞 = 𝐍𝐨𝐢𝐬𝐞 + rand"]
     id_3 --> id_4{"k ≤ 𝐾"}
     id_4 --> |yes|id_3
