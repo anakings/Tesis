@@ -1,100 +1,105 @@
+import os
+import natsort
 from scipy import io
 import numpy as np
-import os
-from sklearn.preprocessing import OneHotEncoder
-import natsort
+import pandas as pd
 
 class HandleData():                                  
-	def __init__(self, phase, folder, one_hot_encode=False, phase_distance='all',until='all',samples_by_distance='all'):
-
+	def __init__(self, phase, folder, phase_distance='all', until='all', samples_by_distance='all'):
 		self.folder = folder
-		content = io.loadmat(folder + '/' + os.listdir(folder)[0])
-		matrix_name = list(content.keys())[-1]
-		data = content[matrix_name]
+
+		# granularity based on angles
 		self.phase = phase
-		self.data = data[::self.phase,::self.phase,:]
-		self.data_set = np.empty((0, self.data.shape[2] - 2), int)
 
-		if self.data.shape[1] != 1:
-			self.label_array = np.empty((0, 2 + 2), int)
-		else:
-			self.label_array = np.empty((0, 1 + 2), int)
-		
-		self.one_hot_encode = one_hot_encode
+		# point from which file you want to take the data giving jumps equal to the specified number
+		self.phase_distance = None if phase_distance == 'all' else phase_distance
 
-		if phase_distance == 'all':                                 #Point from which file you want to take the data, giving jumps equal to the specified number.
-			self.phase_distance = None
-		else:
-			self.phase_distance = phase_distance
+		# up to which file you want to select (up to what distance you want to select)
+		self.until = None if until == 'all' else until
 
-		if until == 'all':                                          #Up to which file you want to select (up to what distance you want to select).	                                                                                                                           
-			self.until = None                                       
-		else:                                                       
-			self.until = until
-
-		if samples_by_distance == 'all':                            #samples_by_distance: How many files of the same distance do you want to take.
-			self.samples_by_distance = None                         #How many files are to be taken from the file pointed to by the phase_files pointer.
-		else:
-			self.samples_by_distance = samples_by_distance
-
-		#print(self.data.shape)
-		#print(self.data_set.shape)
-		if self.one_hot_encode:
-			# self.label_set_one_hot_encoded = np.empty((0, self.data.shape[0]), dtype=np.float32)
-			self.label_set_one_hot_encoded = np.zeros((len(os.listdir(folder)[:self.phase_distance])*self.data.shape[0], self.data.shape[0]), dtype=np.float32)
-		else:
-			self.label_list = []
-
-	def one_hot_encode(self, index):
-		encoded_no = np.zeros(self.data.shape[0], dtype=np.float32)
-		encoded_no[index] = 1
-		return encoded_no
+		# [samples_by_distance] is how many files of the same distance you want to take, 
+		# how many files are to be taken from the file pointed to by the phase_distance pointer.
+		self.samples_by_distance = None if samples_by_distance == 'all' else samples_by_distance
 
 	def get_synthatic_data(self):
-
+		# sort files until [until]
 		list_files = natsort.natsorted(os.listdir(self.folder))[0:self.until]
 
-		list_index = [x+1 for x in range(0,self.until,self.phase_distance)]
+		# select files until [until] every [phase_distance]
+		list_index = [x+1 for x in range(0, self.until, self.phase_distance)]
 
 		for index in list_index:
 			for file in (list_files[index-1:index+self.samples_by_distance-1]):
-		
+				# get power, distance, quadrant, and snr matrix data
 				content = io.loadmat(self.folder + '/' + file)
 				matrix_name = list(content.keys())[-1]
 				org_data = content[matrix_name]
-				org_data = org_data[::self.phase,::self.phase,:]
+				org_data = org_data[::self.phase,::self.phase,:] # granularity based on angles: get data every [phase] angles
 
-				distance = org_data[0:org_data.shape[0],0:org_data.shape[1],(org_data.shape[2]-2):org_data.shape[2]-1].copy() #(azimuth_angles/phase,elevation_angles/phase,1)
-				quadrant = org_data[0:org_data.shape[0],0:org_data.shape[1],(org_data.shape[2]-1):org_data.shape[2]].copy()
-				data = org_data[0:org_data.shape[0],0:org_data.shape[1],0:(org_data.shape[2]-2)].copy()                  #(azimuth_angles/phase,elevation_angles/phase,antenna_number)
+				az_angles = org_data.shape[0] # total number of azimuth angles
+				el_angles = org_data.shape[1] # total number of elevation angles
+				pr_d_q_snr = org_data.shape[2] # number of antennas + distance + quadrant + snr
+				snr_total = org_data.shape[3] # total number of different snr
 
-				label_data_temp = np.zeros(shape=(data.shape[0], data.shape[1], 2))
-				#label_data_temp = np.zeros(shape=(data.shape[0], data.shape[1], 3))
+				antenna_total = pr_d_q_snr - 3 # total number of antennas
 
-				data_reshaped = data.reshape(data.shape[0]*data.shape[1], data.shape[2])
-		
-				self.data_set = np.vstack((self.data_set, data_reshaped))
-
+				# [label_data_temp] contains the values of the azimuth and elevation angles with shape (az_angles, el_angles, 2)
+				label_data_temp = np.zeros(shape=(az_angles, el_angles, 2))
 				for j in range(label_data_temp.shape[0]):
 					for k in range(label_data_temp.shape[1]):
 						label_data_temp[j,k] = np.array([j,k])
-						if self.one_hot_encode:
-							# self.label_set_one_hot_encoded = np.vstack((self.label_set_one_hot_encoded, self.one_hot_encode(j*label_data_temp.shape[1]+k)))
-							self.label_set_one_hot_encoded[index*self.data.shape[0]+j, j*label_data_temp.shape[1]+k] = 1
-						else:
-							self.label_list.append(j*label_data_temp.shape[1]+k)
+				
+				# [label_array] is reshaped as (az_angles * el_angles * snr_total, 2): two columns, one for azimuth and one for elevation
+				self.label_array = np.concatenate(np.array([label_data_temp for i in range(snr_total)]), axis=0)
+				self.label_array = self.label_array.reshape(self.label_array.shape[0]*self.label_array.shape[1], 2)
 
-				label_data_temp = np.append(label_data_temp, distance, axis = 2)
-				label_data_temp = np.append(label_data_temp, quadrant, axis = 2)
-				label_data_temp = label_data_temp.reshape(label_data_temp.shape[0]*label_data_temp.shape[1], 2 + 2)
-				# label_data_temp = label_data_temp.reshape(label_data_temp.shape[0]*label_data_temp.shape[1], 2)
-				self.label_array = np.vstack((self.label_array, label_data_temp))
+				# data for every feature
+				power_list = []
+				distance_list = []
+				quadrant_list = []
+				snr_list = []
 
-		if self.one_hot_encode:
-			return self.data_set, self.label_set_one_hot_encoded, self.label_array
-		else:
-			# enc = OneHotEncoder(handle_unknown='ignore')
-			# enc.fit(self.label_array)
-			# self.label_array = enc.transform(self.label_array).toarray()
-			#print(self.label_array)
-			return self.data_set, self.label_list, self.label_array
+				# get data for each snr
+				for snr_index in range(snr_total):
+					# get power data by specific snr (az_angles, el_angles, antenna_total)
+					power_by_snr = org_data[:, :, :antenna_total, snr_index]
+					# reshape as (az_angles * el_angles, antenna_total)
+					power_by_snr_reshaped = power_by_snr.reshape(az_angles * el_angles, antenna_total)
+					
+					# get distance data by specific snr (az_angles, el_angles, 1)
+					distance_by_snr = org_data[:, :, antenna_total, snr_index]
+					# reshape as (az_angles * el_angles, 1)
+					distance_by_snr_reshaped = distance_by_snr.reshape(az_angles * el_angles, 1)
+					
+					# get quadrant data by specific snr (az_angles, el_angles, 1)
+					quadrant_by_snr = org_data[:, :, antenna_total + 1, snr_index]
+					# reshape as (az_angles * el_angles, 1)
+					quadrant_by_snr_reshaped = quadrant_by_snr.reshape(az_angles * el_angles, 1)
+
+					# get snr data by specific snr (az_angles, el_angles, 1)
+					snr_by_snr = org_data[:, :, antenna_total + 2, snr_index]
+					# reshape as (az_angles * el_angles, 1)
+					snr_by_snr_reshaped = snr_by_snr.reshape(az_angles * el_angles, 1)
+
+					power_list.append(power_by_snr_reshaped)
+					distance_list.append(distance_by_snr_reshaped)
+					quadrant_list.append(quadrant_by_snr_reshaped)
+					snr_list.append(snr_by_snr_reshaped)
+
+				power = np.concatenate(tuple([i for i in power_list]), axis=0)
+				distance = np.concatenate(tuple([i for i in distance_list]), axis=0)
+				quadrant = np.concatenate(tuple([i for i in quadrant_list]), axis=0)
+				snr = np.concatenate(tuple([i for i in snr_list]), axis=0)
+
+				# legend: column label of dataframe
+				column_power = ['Pr'+ str(i) for i in range(power.shape[1])]
+				column_label = ['azimuth', 'elevation', 'distance', 'quadrant', 'SNR']
+				column_list = column_label + column_power
+				
+				dataset = np.concatenate((self.label_array, distance, quadrant, snr, power), axis=1)
+
+				# create a dataframe with labels
+				dataset = pd.DataFrame(dataset, columns=column_list)
+				print(dataset)
+
+		return dataset
