@@ -76,10 +76,11 @@ if __name__ == '__main__':
 	#Type of antennas in the receiving system. Each type of antenna has its dataset
 	antenna_type = 'dipoleVee'
 	
-	experiment = 'RegressionPower'
+	experiment = 'RegressionCorr_antenna_plus'
 
+	data = 'data_corr_antenna_plus'
 	# Folder where the dataset is for the receiving antennas defined in the variable antenna_type
-	data_folder = './' + antenna_type + '/data_with_loss'
+	data_folder = './' + antenna_type + '/data/' + data
 
 	folder_fig = './' + antenna_type + '/results_comparison/' + experiment + '/'
 	if not os.path.exists(folder_fig):
@@ -95,19 +96,12 @@ if __name__ == '__main__':
 	# This variable will be used to obtain data from the dataset
 	phase_list = [1]
 	
-	# List containing the ML models to be used
-# 	ML_model_dict = {'DT_Regressor' : MultiOutputRegressor(DecisionTreeRegressor(criterion='friedman_mse', max_depth=562
-# , min_samples_split=25, min_samples_leaf=23, splitter='random', max_features='auto', random_state=random_state))}
-	#ML_model_dict = {'DT_Regressor' : DecisionTreeRegressor(random_state=random_state)}
-	ML_model_dict = {'DT_Regressor' : DecisionTreeRegressor(criterion='friedman_mse', min_samples_split=25, min_samples_leaf=23, splitter='best', max_features='auto', random_state=random_state)}
+	ML_model_dict = {'DT_Regressor' : DecisionTreeRegressor(random_state=random_state)}
 
 	min_distance = 123
 	distanceList = [213]
 	
 	list_proposal = [Multioutput]
-
-	color_list = ['b', 'y', 'g', 'r', 'm', 'c', 'k']
-
 
 	for phase in phase_list:
 		print('\nphase angle: ' + str(phase))
@@ -117,20 +111,11 @@ if __name__ == '__main__':
 			ML_model = ML_model_dict[ML_model_key]
 			print('\n'+ ML_model_key + ' :' , ML_model)
 
-			color_index = 0
-
 			# Obtain the results of the proposal for different number of receiving antennas
 			#for antenna_number in natsort.natsorted(os.listdir(data_folder)):
-			for antenna_number in ['4', '6', '8', '10', '12', '14', '16']:
+			for antenna_number in ['16']:
 	
 				print('\nnumber of antennas: ' + str(antenna_number))
-				
-				# Create the dataframes that will be saved
-				labels = pd.DataFrame(columns=['antenna_number', 'SNR', 'color_graphs_3D', 'azimuth_validation', 'elevation_validation', 'azimuth_predict','elevation_predict'])
-				logs_df = pd.DataFrame(columns=['antenna_number', 'SNR', 'accuracyOfModel', 'mse', 'accuracy_per_target', 'mean_squared_error_per_target'])
-				
-				color_antenna = color_list[color_index]
-				color_index += 1
 
 				#################################################################################################################################################################################
 				################################## Get the dataset for 'antenna_number' number of antennas ######################################################################################
@@ -156,10 +141,10 @@ if __name__ == '__main__':
 						power_data = snr_by_snr[1].loc[:, 'Pr0':]
 
 						# Normalize power_data
-						power_data = power_data.div(power_data.sum(axis=1), axis=0)
+						#power_data = power_data.div(power_data.sum(axis=1), axis=0)
 
 						# Get the labels to train the ML model. In this case the labels will be made up of the azimuth and elevation angles
 						label_data = snr_by_snr[1].loc[:, :'elevation']
 						cv = ShuffleSplit(n_splits=10, test_size=0.1, random_state=0)
-						#plot_learning_curve(ML_model, power_data, label_data, ylim=(0.7, 1.01), cv=cv, train_sizes=np.linspace(.1, 1.0, 10))
-						plot_validation_curve(ML_model, power_data, label_data, 'min_samples_split', np.linspace(1, 50, 10), xlabel=None, ylim=None, n_jobs=None)
+						plot_learning_curve(ML_model, power_data, label_data, ylim=(0.7, 1.01), cv=cv, train_sizes=np.linspace(.1, 1.0, 10))
+						#plot_validation_curve(ML_model, power_data, label_data, 'min_samples_split', np.linspace(1, 50, 10), xlabel=None, ylim=None, n_jobs=None)

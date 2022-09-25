@@ -22,7 +22,7 @@ from model import *
 
 # to Hyperparameter Optimization Analysis
 # from optuna_setup import Objective
-import optuna_setup, optuna_setup_classifier
+import optuna_setup
 
 ######################################################################################################################
 # import sklearn modules
@@ -64,10 +64,12 @@ if __name__ == '__main__':
 	
 	experiment = 'optuna_cov_class'
 
+
+	data = 'data_cov_antenna_plus'
 	# Folder where the dataset is for the receiving antennas defined in the variable antenna_type
-	data_folder = './' + antenna_type + '/data_with_loss_cov'
+	data_folder = './' + antenna_type + '/data/' + data
 	# Folder where all results of the ML models for the dataset are saved
-	logs_folder = './' + antenna_type + '/results/' + experiment + '/'
+	logs_folder = './' + antenna_type + '/optuna/results/' + experiment + '/'
 
 	# Instance of the class used to save the results of the ML models
 	objectLogs = logs()
@@ -149,7 +151,7 @@ if __name__ == '__main__':
 						saveLabels(y_train, './' + antenna_type + '/training_angles/' + str(phase) + '/' + proposal.__name__ + '/' + str(antenna_number) + '/')
 						saveLabels(y_val, './' + antenna_type + '/validation_angles/' + str(phase) + '/' + proposal.__name__ + '/' + str(antenna_number) + '/')
 
-						mse, best_params, best_trial = optuna_setup_classifier.optuna_main(x_train, x_val, y_train, y_val)
+						mse, best_params, best_trial = optuna_setup.optuna_main(x_train, x_val, y_train, y_val)
 
 						listValues = [antenna_number, SNR, mse, best_params, best_trial]
 						print(listValues)

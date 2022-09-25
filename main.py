@@ -37,13 +37,14 @@ from sklearn.linear_model import LinearRegression,  RidgeClassifier, SGDClassifi
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 from sklearn.ensemble import RandomForestClassifier, BaggingClassifier, BaggingRegressor, RandomForestRegressor, VotingClassifier, VotingRegressor
 from sklearn.naive_bayes import GaussianNB
-from sklearn.svm import SVC
-from sklearn.neural_network import MLPClassifier
+from sklearn.svm import SVC, SVR          #SVR NO, DEMORA MUCHISIMO
+from sklearn.neural_network import MLPRegressor
 
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import PolynomialFeatures, StandardScaler
 from sklearn.multioutput import MultiOutputClassifier, MultiOutputRegressor
 from sklearn.metrics import mean_absolute_error, mean_squared_error, accuracy_score
+import time
 
 def saveValidationLabels(label_validation, path):
 	# Create a folder folder_save
@@ -64,15 +65,15 @@ if __name__ == '__main__':
 	#Type of antennas in the receiving system. Each type of antenna has its dataset
 	antenna_type = 'dipoleVee'
 	
-	experiment = 'RegressorCov_without_normalized'
+	experiment = 'RegressionCorr'
 
+	data = 'data_corr_antenna_plus'
 	# Folder where the dataset is for the receiving antennas defined in the variable antenna_type
-	data_folder = './' + antenna_type + '/data_with_loss_cov_without_normalized'
+	data_folder = './' + antenna_type + '/data/' + data
 	# Folder where all results of the ML models for the dataset are saved
 	logs_folder = './' + antenna_type + '/results/' + experiment + '/'
 
-	# # Folder where all results of the ML models for the dataset are saved
-	# logs_folder_comparison = './' + antenna_type + '/results_comparison/' + experiment + '/' + 'Scatter graphs' + '/'
+	label_name = ['azimuth','elevation']
 
 	# Instance of the class used to save the results of the ML models
 	objectLogs = logs()
@@ -102,7 +103,8 @@ if __name__ == '__main__':
 	# ML_model_dict = {'DecisionTreeRegressor': DecisionTreeRegressor(criterion='friedman_mse', max_depth=666
 	#  	, min_samples_split=18, min_samples_leaf=15, splitter='random', max_features='sqrt', random_state=random_state)}
 
-	ML_model_dict = {'DecisionTreeRegressor': DecisionTreeRegressor(random_state=random_state)}
+	#ML_model_dict = {'MLPRegressor': MultiOutputRegressor(MLPRegressor())}
+	ML_model_dict = {'RandomForestRegressor': RandomForestRegressor(n_estimators=10)}
 
 	# dt = DecisionTreeRegressor(criterion='friedman_mse', max_depth=666
  # , min_samples_split=18, min_samples_leaf=15, splitter='random', max_features='sqrt', random_state=random_state)
@@ -115,6 +117,12 @@ if __name__ == '__main__':
 	list_proposal = [Multioutput]
 
 	color_list = ['b', 'y', 'g', 'r', 'm', 'c', 'k']
+
+	label_name_validation = [i + ' validation' for i in label_name]
+	label_name_predict = [i + ' predict' for i in label_name]
+	
+	label_name_mse = [i + ' mse' for i in label_name]
+	label_name_accuracy = [i + ' accuracy' for i in label_name]
 
 
 	for phase in phase_list:
@@ -129,13 +137,13 @@ if __name__ == '__main__':
 
 			# Obtain the results of the proposal for different number of receiving antennas
 			#for antenna_number in natsort.natsorted(os.listdir(data_folder)):
-			for antenna_number in ['10','12','14','16']:
+			for antenna_number in ['4','6','8','10','12','14','16']:
 	
 				print('\nnumber of antennas: ' + str(antenna_number))
 				
 				# Create the dataframes that will be saved
-				labels = pd.DataFrame(columns=['antenna_number', 'SNR', 'color_graphs_3D', 'azimuth_validation', 'azimuth_predict', 'elevation_validation','elevation_predict'])
-				logs_df = pd.DataFrame(columns=['antenna_number', 'SNR', 'accuracyOfModel', 'mse', 'accuracy_per_target', 'mean_squared_error_per_target'])
+				labels = pd.DataFrame(columns=['antenna number', 'SNR', 'color graphs'] + label_name_validation + label_name_predict)
+				logs_df = pd.DataFrame(columns=['antenna number', 'SNR', 'prediction time', 'accuracy', 'mse'] + label_name_accuracy + label_name_mse)
 				
 				color_antenna = color_list[color_index]
 				color_index += 1
@@ -155,7 +163,6 @@ if __name__ == '__main__':
 					################################## Preparation of the files where the results of the proposal will be saved #####################################################################
 					# Folder where the results of the proposal for each resolution and each number of antennas are saved
 					folder_save = logs_folder + str(phase) + '/' + proposal.__name__ + '/' + str(antenna_number) + '/'
-					#folder_save_comparison = logs_folder_comparison + '/' + str(antenna_number) + '/'
 			
 					# Create a folder folder_save
 					objectLogs.createFolder(folder_save)
@@ -183,11 +190,12 @@ if __name__ == '__main__':
 						
 						# Get the power values obtained in the receiving antennas to train the ML model.
 						power_data = snr_by_snr[1].loc[:, 'Pr0':]
+						power_data = power_data.iloc[:, :-1]
 
 						# Normalize power_data
 						power_data = power_data.div(power_data.sum(axis=1), axis=0)
 
-						label_data = snr_by_snr[1].loc[:, :'elevation']
+						label_data = snr_by_snr[1].loc[:, :label_name[-1]]
 
 						power_data_train, power_data_validation, label_train, label_validation = train_test_split(power_data, label_data, test_size=test_percentage, random_state=random_state)
 						#saveValidationLabels(label_validation, './' + antenna_type + '/validation_angles/' + str(phase) + '/' + proposal.__name__ + '/' + str(antenna_number) + '/')
@@ -195,9 +203,12 @@ if __name__ == '__main__':
 						clf = ML_model
 						clf.fit(power_data_train, label_train)
 						
+						start_time = time.time()
 						y_pred = clf.predict(power_data_validation)
-						y_pred = pd.DataFrame(y_pred, columns = ['azimuth_predict', 'elevation_predict'])
-	
+						time_pred = time.time() - start_time
+						
+						y_pred = pd.DataFrame(y_pred, columns = label_name_predict)
+			
 						antenna_number_tem = [int(antenna_number) for i in range(y_pred.shape[0])]
 	
 						SNR_tem = [int(SNR) for i in range(y_pred.shape[0])]
@@ -214,25 +225,26 @@ if __name__ == '__main__':
 						mse = sum(mean_squared_error_per_target)
 						accuracyOfModel = np.prod(accuracy_per_target)
 
-						listResults = [antenna_number, SNR, accuracyOfModel, mse, accuracy_per_target, mean_squared_error_per_target]
-						print(listResults)
+						listResults = [antenna_number, SNR, time_pred, accuracyOfModel, mse] + accuracy_per_target + mean_squared_error_per_target
 
 						# df.loc() function to add a row to the end of a pandas
 						logs_df.loc[len(logs_df.index)] = listResults
+						print(logs_df)
 
 						# This is important to make concat then
 						label_validation = label_validation.reset_index(drop=True)
 
-						label_validation = label_validation.rename(columns={'azimuth': 'azimuth_validation', 'elevation': 'elevation_validation'})
+						#label_validation = label_validation.rename(columns={'azimuth': 'azimuth_validation', 'elevation': 'elevation_validation'})
+						label_validation.columns = label_name_validation
 
 						# Join label_validation and y_pred dataframes
 						label_temp = pd.concat([label_validation, y_pred], axis = 1, join='inner')
 
-						label_temp.insert(0,'color_graphs_3D', color_antenna )
+						label_temp.insert(0,'color graphs', color_antenna)
 						label_temp.insert(0,'SNR', SNR_tem )
-						label_temp.insert(0,'antenna_number', antenna_number_tem )
+						label_temp.insert(0,'antenna number', antenna_number_tem)
 
 						labels = labels.append(label_temp, ignore_index=True)
-						
+			
 				labels.to_csv(folder_save + ML_model_key + '_labels.csv', mode='w')
 				logs_df.to_csv(folder_save + ML_model_key + '.csv', mode='w')

@@ -100,7 +100,7 @@ class HandleData():
 		# create a dataframe with labels
 		dataset = np.concatenate(tuple([i for i in dataset_list]), axis=0)
 		datasetPd = pd.DataFrame(dataset, columns=column_list)
-		#print(datasetPd)
+		print(datasetPd)
 
 		return datasetPd
 		

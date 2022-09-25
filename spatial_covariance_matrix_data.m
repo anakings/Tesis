@@ -1,6 +1,6 @@
 function [] = spatial_covariance_matrix_data(name, N, antenna_type, fc, lambda, ...
     fs, r, d_matrix, azimuthFinalAngle, elevationFinalAngle, angle_step, ... 
-    SNR_list, withLoss)
+    SNR_list, withAntennaPlus)
 
     % Compute antennas coordinates [N+1 x 3],
     % N+1: Number of antennas, 1 => Antenna at the center of the system
@@ -11,6 +11,13 @@ function [] = spatial_covariance_matrix_data(name, N, antenna_type, fc, lambda, 
         antenna_coordinates(n,1) = r*cosd(360*(n-1)/N); % x axis
         antenna_coordinates(n,2) = r*sind(360*(n-1)/N); % y axis
         antenna_coordinates(n,3) = 0; % z axis                               
+    end
+    
+    if withAntennaPlus
+        % Add antenna at the center of the receiving system
+        antenna_coordinates(N+1,1) = 0;
+        antenna_coordinates(N+1,2) = 0;
+        antenna_coordinates(N+1,3) = r;
     end
     
     act = antenna_coordinates.'; % act: Antenna coordinate transpose
@@ -32,7 +39,13 @@ function [] = spatial_covariance_matrix_data(name, N, antenna_type, fc, lambda, 
         SNR_len = SNR_len_temp(2);
         
         % [360x180xN]
-        lengthVector = 1:N-1;
+        %lengthVector = N*N;
+        if withAntennaPlus
+            N_total = N +1;
+        else
+            N_total = N;
+        end
+        lengthVector = 1:N_total;
         lengthVector = sum(lengthVector)*2;
         Pr = zeros(azimuthFinalAngle/angle_step, elevationFinalAngle/angle_step, lengthVector+3, SNR_len);
     
@@ -57,7 +70,6 @@ function [] = spatial_covariance_matrix_data(name, N, antenna_type, fc, lambda, 
                 elevation_index = elevation_index + 1;
                 % Readjust angles to be in the range [-180:180]
                 azimuthAngleAdj = azimuthAngle - 180;
-                    
                 doa = [azimuthAngleAdj; elevationAngle]; % Signal direction
 
                 % Received signal without noise
@@ -68,7 +80,6 @@ function [] = spatial_covariance_matrix_data(name, N, antenna_type, fc, lambda, 
                     variance = 1 / 10.^(SNR_list(SNR_index)/10); 
                     noise = sqrt(variance) * randn(size(x));
                     signal = x + noise;
-                    
                     % Find the spatial covariance matrix of signal
                     covSignal = cov(signal);           %NxN
                     
@@ -76,23 +87,20 @@ function [] = spatial_covariance_matrix_data(name, N, antenna_type, fc, lambda, 
                     %respect to the diagonal, the elements of its upper or 
                     %lower triangular part provide enough information for 
                     %2D DOA estimation.
-                    covSignal = triu(covSignal,1);
+                    covSignal = triu(covSignal);
                     
                     % Remove values = zero and convert the matrix to a vector
+                    
                     covSignalVector = nonzeros(covSignal(:))';
                     
                     % Divide into real and imaginary part
                     realPart = real(covSignalVector);
                     imagPart = imag(covSignalVector);
                     covSignalVector = [realPart imagPart];
-                    
-                    % Normalize using Min-Max scaling
-                    minCovSignal = min(covSignalVector);
-                    maxCovSignal = max(covSignalVector);
-                    NorCov = (covSignalVector - minCovSignal)/(maxCovSignal - minCovSignal);
-                   
+                    %size(covSignalVector)
+
                     Pr(azimuth_index, elevation_index, 1:lengthVector, SNR_index) = ...
-                        NorCov;
+                        covSignalVector;
 
                     % Save distance between source and center of the
                     % receiving system

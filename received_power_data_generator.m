@@ -54,15 +54,15 @@ end
 
 % Folder where the data matrix will be stored
 if withLoss
-    folder = strcat('/', antenna_name, '/data_with_loss/');
+    folder = strcat('/', antenna_name, '/data', '/data_power_with_loss/');
 else
-    folder = strcat('/', antenna_name, '/data_no_loss/');
+    folder = strcat('/', antenna_name, '/data', '/data_power_no_loss/');
 end
 
 mkdir([pwd folder]); % Create folder
 
 % Get antennas received power and save them on specified path
-for antennasNumber = 5:2:15
+for antennasNumber = 10:2:16
     mkdir([pwd folder '/' int2str(antennasNumber)]);
     name = strcat(pwd, folder, '/', int2str(antennasNumber), '/iter_');
     received_power_data(name, antennasNumber, antenna_type, fc, lambda, ...

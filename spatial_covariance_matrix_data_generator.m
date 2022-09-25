@@ -1,31 +1,45 @@
 clear; clc;
 
-iterations = 1; % Number of matrixes to be generated for each distance
-SNR_min = 10;
-SNR_max = 20;
+iterations = 20; % Number of matrixes to be generated for each distance
+SNR_min = -10;
+SNR_max = 40;
 SNR_step = 10; % Jumps from SNR_min to SNR_max
 SNR_list = SNR_min:SNR_step:SNR_max; % Usable SNRs
-fc = 500e6; % Signal frequency
+fc = 70e6; % Signal frequency
 c = physconst('LightSpeed');
 lambda = c/fc; % Wavelength
-r = 0.75; % Radio of the circular receiving system
-fs = 1024; % Sample frequency
-withLoss = true; % Apply propagation loss (true) or not (false)
+r = 10; % Radio of the circular receiving system
+fs = 1500; % Sample frequency
+withAntennaPlus = true; % Apply propagation loss (true) or not (false)
 
-antenna_type = phased.IsotropicAntennaElement(...
-    'FrequencyRange',[400e6 600e6],'BackBaffled',false);
-antenna_name = 'isotropic';
+dipoleVeeLength = 143e6 / fc;
+dipoleVeeArmLength = dipoleVeeLength / 2;
+armElevationAngle = 45;
+antenna_type = dipoleVee(...
+    'ArmLength', [dipoleVeeArmLength, dipoleVeeArmLength], ...
+    'ArmElevation', [armElevationAngle armElevationAngle]);
+antenna_name = 'dipoleVee';
+
+% Maximum linear dimension of antenna
+D = 2 * dipoleVeeArmLength * sind(90 - armElevationAngle);
 
 azimuthFinalAngle = 360;
-elevationFinalAngle = 90;
-angle_step = 0.3;
+elevationFinalAngle = 89;
+angle_step = 1;
 
 % Number of different distances
 distanceQty = 0;
 
 % Compute the minimum distance in meters between the source and the
 % receiving system for far field
-min_dist = 10; %aqui la distancia no importa para nada
+farFieldFirstCond = 2 * D^2 / lambda;
+farFieldSecondCond = 10 * D;
+farFieldThirdCond = 10 * lambda;
+farFieldConditions = [...
+    farFieldFirstCond ...
+    farFieldSecondCond ...
+    farFieldThirdCond];
+min_dist = max(farFieldConditions);
 
 % Create matrix of distances
 for max_dist = min_dist + distanceQty
@@ -40,19 +54,19 @@ for max_dist = min_dist + distanceQty
 end
 
 % Folder where the data matrix will be stored
-if withLoss
-    folder = strcat('/', antenna_name, '/data_with_loss/');
+if withAntennaPlus
+    folder = strcat('/', antenna_name, '/data', '/data_cov_antenna_plus/');
 else
-    folder = strcat('/', antenna_name, '/data_no_loss/');
+    folder = strcat('/', antenna_name, '/data', '/data_cov/');
 end
 
 mkdir([pwd folder]); % Create folder
 
 % Get antennas received power and save them on specified path
-for antennasNumber = 9
+for antennasNumber = 4:2:16
     mkdir([pwd folder '/' int2str(antennasNumber)]);
     name = strcat(pwd, folder, '/', int2str(antennasNumber), '/iter_');
     spatial_covariance_matrix_data(name, antennasNumber, antenna_type, fc, lambda, ...
         fs, r, d_matrix, azimuthFinalAngle, elevationFinalAngle, angle_step, ...
-        SNR_list, withLoss);
+        SNR_list, withAntennaPlus);
 end
